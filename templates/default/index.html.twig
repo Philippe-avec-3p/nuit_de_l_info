@@ -1,0 +1,179 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block body %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Text:wght@400;700&display=swap');
+
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+
+    :root{
+        --color: #333;
+    }
+
+    body {
+        font-family: 'Red Hat Text', sans-serif;
+    }
+
+    .container {
+        text-align: center;
+        color: white;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-image: url(https://www.10wallpaper.com/wallpaper/1366x768/1611/Sunshine_in_the_forest-Nature_Scenery_Wallpaper_1366x768.jpg);
+        background-size: cover;
+        background-position: center;
+
+        /*  this is where the magic happens:  */
+        background-attachment: fixed;
+    }
+
+    h1 {
+        font-weight: 700;
+        font-size: 3rem;
+    }
+
+    p {
+        max-width: 52ch;
+        line-height: 1.5;
+        padding: 1em;
+    }
+
+    a {
+        display: inline-block;
+        padding: 1em 3.5em;
+        background-color: var(--color);
+        color: white;
+        text-decoration: none;
+        text-transform: uppercase;
+        border-radius: 0.3em;
+        font-weight: 700;
+        letter-spacing: .5px;
+        font-size: .875rem;
+    }
+
+    .blank,
+    .other {
+        width: 100%;
+        min-height: 60vh;
+        background-color: var(--color);
+    }
+
+    .second {
+        background-image:url(https://images.unsplash.com/photo-1514496959998-c01c40915c5f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80);
+        background-attachment: fixed;
+        height: 1200px;
+    }
+
+    h3 {
+        font-weight: 700;
+        font-size: 1.6rem;
+        margin-top: 1em;
+    }
+
+    .card > a {
+        margin-bottom: 2em;
+    }
+
+    .item {
+        display: flex;
+        max-width: 320px;
+        background-color: white;;
+        flex-direction: column;
+        align-items: center;
+        border-radius: .5em;
+        -webkit-box-shadow: 0px 29px 38px -15px rgba(0,0,0,0.43);
+        -moz-box-shadow: 0px 29px 38px -15px rgba(0,0,0,0.43);
+        box-shadow: 0px 29px 38px -15px rgba(0,0,0,0.43);
+    }
+
+    .img {
+        width: 90%;
+        height: 200px;
+        background-color: lightgrey;
+        background-size: cover;
+        background-position: center;
+        margin-top: 20px;
+        border-radius: .3em;;
+    }
+
+    .img-first {
+        background-image: url(https://www.gaiamag.fr/wp-content/uploads/2019/09/2.jpg);
+    }
+
+    .img-second {
+        background-image: url(https://up-magazine.info/wp-content/uploads/2022/10/montee-eaux.jpg);
+    }
+
+    .img-third {
+        background-image: url(https://www.aquaportail.com/pictures1703/foret-pluie-acide.jpg);
+    }
+
+    .second {
+        flex-direction: row;
+        gap: 1.6em;
+    }
+
+</style>
+
+
+
+
+<div class="container">
+    <h1>Tous en avant pour l'environnement</h1>
+    <p>Un petit geste pour l'environnement un grand changement pour la planète :)</p>
+    <a href="{{ path('app_jeu') }}">JEU</a>
+
+</div>
+
+<div class="blank"></div>
+
+<div class="container second">
+    <div class="item">
+        <div class="img img-first"></div>
+        <div class="card">
+            <h3>Changements climatiques</h3>
+            <p>Occupant une part de plus en plus importante au sein des préoccupations mondiales, le changement climatique est le résultat de l'influence des gaz à effet de serre produits par les activités humaines sur le climat de la Terre.</p>
+            <a href="https://www.eaufrance.fr/le-changement-climatique">Détails </a>
+            <a href="{{ path('app_changementquizz') }}">quizz </a>
+        </div>
+    </div>
+    <div class="item">
+        <div class="img img-second"></div>
+        <div class="card">
+            <h3>Montée des eaux</h3>
+            <p>"Ils ne sont plus du tout en bonne santé" : comment les glaciers sont fragilisés par le réchauffement climatique.</p>
+            <a href="https://www.francetvinfo.fr/monde/environnement/montee-des-eaux/">Détails</a>
+            <a href="{{ path('app_monteequizz') }}">quizz </a>
+
+        </div>
+    </div>
+    <div class="item">
+        <div class="img img-third"></div>
+        <div class="card">
+            <h3>Pluies acides </h3>
+            <p>Les pluies acides se produisent lorsque les précipitations contenant des particules acides tombent sur la surface de la Terre. Les précipitations tombent sous la forme de pluie, de neige, de giboulée ou de grêle. Elles récoltent les particules d’acide et les gaz pour devenir acides à leur tour. Ces particules auront un niveau de pH inférieur à 5,6.</p>
+            <a href="https://www.canada.ca/fr/environnement-changement-climatique/services/pollution-atmospherique/enjeux/pluies-acides-causes-effets.html"> Détails</a>
+            <a href="{{ path('app_pluiequizz') }}">quizz </a>
+
+        </div>
+    </div>
+    <div class="item">
+        <div class="img img-third"></div>
+        <div class="card">
+            <h3> Mieux comprendre le réchauffement climatique </h3>
+            <p>Quel ce que le réchauffement climatique ?
+                Le réchauffement climatique est un phénomène global de transformation du climat caractérisé par une augmentation générale des températures moyennes (liée aux activités humaines), et qui modifie durablement les équilibres météorologiques et les écosystèmes.</p>
+            <a href="{{ path('app_clim') }}"> Détails</a>
+        </div>
+    </div>
+</div>
+
+<div class="blank"></div>
+{% endblock %}

@@ -1,0 +1,494 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <head>
+        <!-- Meta -->
+        <meta charset="UTF-8" />
+        <title>Le Quizz</title>
+
+        <!-- Styles -->
+        <link rel="stylesheet" href="{{ asset('lib/lib.css') }}">
+        <link rel="stylesheet" href="{{ asset('styles/style.css') }}">
+
+        <style>
+            /*
+  lib/lib.css
+*/
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+
+            .question {
+                --correct-color: rgb(9, 187, 69);
+                --incorrect-color: rgb(245, 48, 48);
+                --selected-color: rgba(13, 110, 221, 0.712);
+                --disabled-color: rgb(219, 219, 219);
+                --disabled-correct-color: rgb(118, 212, 149);
+                --disabled-incorrect-color: rgb(221, 131, 131);
+
+                position: relative;
+                width: 500px;
+                height: 100%;
+                min-width: 500px;
+                min-height: max-content;
+                display: flex;
+                flex-direction: column;
+                padding: 1em;
+                border: 1px solid var(--selected-color);
+                border-radius: 10px;
+                font-family: consolas;
+            }
+
+            .question-text {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 20px;
+                text-transform: capitalize;
+            }
+
+            .answers {
+                display: grid;
+                grid-template-columns: repeat(2, auto);
+                gap: 15px 20px;
+                margin-bottom: 20px;
+            }
+
+            .answer {
+                border: none;
+                font-size: 18px;
+                background: none;
+                padding: 10px 5px;
+                border: 1px solid rgba(13, 110, 221, 0.712);
+                outline: none;
+                border-radius: 10px;
+                cursor: pointer;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+            }
+
+            .question.correct {
+                border-color: var(--correct-color);
+            }
+            .question.incorrect {
+                border-color: var(--incorrect-color);
+            }
+
+            .question.correct .answer.selected {
+                --selected-color: var(--correct-color);
+            }
+            .question.incorrect .answer.selected {
+                --selected-color: var(--incorrect-color);
+            }
+
+            .answer:hover {
+                background: rgba(13, 110, 221, 0.712);
+                color: white;
+                transition: all 200ms ease-out;
+            }
+
+            .answer.selected {
+                background: var(--selected-color);
+                border-color: var(--selected-color);
+                color: white;
+            }
+
+            .question.disabled .answer,
+            .question.disabled .answer:hover {
+                background-color: var(--disabled-color);
+                border-color: var(--disabled-color);
+            }
+            .question.disabled.correct .answer.selected {
+                background-color: var(--disabled-correct-color);
+                border-color: var(--disabled-correct-color);
+            }
+            .question.disabled.incorrect .answer.selected {
+                background-color: var(--disabled-incorrect-color);
+                border-color: var(--disabled-incorrect-color);
+            }
+
+            .question-feedback {
+                color: black;
+                font-family: consolas, Cambria, sans-serif;
+                font-size: 18px;
+                font-weight: 500;
+                display: none;
+            }
+
+            .question.correct .question-feedback,
+            .question.incorrect .question-feedback {
+                display: inline-block;
+            }
+
+            .question.correct .question-feedback {
+                color: var(--correct-color);
+            }
+            .question.incorrect .question-feedback {
+                color: var(--incorrect-color);
+            }
+
+            /*
+              style.css
+            */
+
+            #app-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                padding: 40px 20px;
+            }
+
+            #questions-container {
+                display: grid;
+                grid-template-columns: repeat(2, auto);
+                grid-template-rows: repeat(3, max-content);
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+            }
+
+            #score-container {
+                position: fixed;
+                right: 40px;
+                top: 40px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 18px;
+                font-weight: bold;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                color: white;
+                background: rgb(13, 110, 221);
+                padding: 10px 15px;
+                min-width: 100px;
+                min-height: 45px;
+                border-radius: 10px;
+            }
+
+            #app-title {
+                margin-top: 0;
+                margin-bottom: 40px;
+                margin: 0 0 40px 20px;
+            }
+
+        </style>
+    </head>
+
+    <body>
+    <div id="app-container">
+        <div id="score-container">Score: 0</div>
+        <h2 id="app-title">Quizz sur le changement climatique</h2>
+        <div id="questions-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ asset('lib/lib.js') }}"></script>
+    <script>
+        //
+        // lib/lib.js
+        //
+        var Question = function (questionObj) {
+            this.value = {
+                text: "Question",
+                answers: []
+            };
+
+            this.selectedAnswer = null;
+            this.html = null;
+            this.questionText = null;
+            this.questionAnswers = null;
+            this.questionFeedback = null;
+
+            this.value = Object.assign(this.value, questionObj);
+
+            this.onQuestionAnswered = ({ detail }) => {
+                this.selectedAnswer = {
+                    value: detail.answer,
+                    html: detail.answerHtml
+                };
+                this.update();
+
+                document.dispatchEvent(
+                    new CustomEvent("question-answered", {
+                        detail: {
+                            question: this,
+                            answer: detail.answer
+                        }
+                    })
+                );
+            };
+
+            this.create = function () {
+                this.html = document.createElement("div");
+                this.html.classList.add("question");
+
+                this.questionText = document.createElement("h2");
+                this.questionText.textContent = this.value.text;
+
+                this.questionAnswers = document.createElement("div");
+                this.questionAnswers.classList.add("answers");
+
+                for (let i = 0; i < this.value.answers.length; i++) {
+                    const ansObj = this.value.answers[i];
+                    let answer = createAnswer(ansObj);
+
+                    answer.onclick = (ev) => {
+                        if (this.selectedAnswer !== null) {
+                            this.selectedAnswer.html.classList.remove("selected");
+                        }
+
+                        answer.classList.add("selected");
+
+                        this.html.dispatchEvent(
+                            new CustomEvent("question-answered", {
+                                detail: {
+                                    answer: ansObj,
+                                    answerHtml: answer
+                                }
+                            })
+                        );
+                    };
+
+                    this.questionAnswers.appendChild(answer);
+                }
+
+                this.questionFeedback = document.createElement("div");
+                this.questionFeedback.classList.add("question-feedback");
+
+                this.html.appendChild(this.questionText);
+                this.html.appendChild(this.questionAnswers);
+                this.html.appendChild(this.questionFeedback);
+
+                this.html.addEventListener("question-answered", this.onQuestionAnswered);
+
+                return this.html;
+            };
+
+            this.disable = function () {
+                this.html.classList.add("disabled");
+                this.html.onclick = (ev) => {
+                    ev.stopPropagation();
+                };
+
+                this.html.removeEventListener("question-answered", this.onQuestionAnswered);
+
+                let answers = this.html.querySelectorAll(".answer");
+                for (let i = 0; i < answers.length; i++) {
+                    let answer = answers[i];
+                    answer.onclick = null;
+                }
+            };
+
+            this.remove = function () {
+                let children = this.html.querySelectorAll("*");
+                for (let i = 0; i < children.length; i++) {
+                    const child = children[i];
+                    this.html.removeChild(child);
+                }
+
+                this.html.removeEventListener("question-answered", this.onQuestionAnswered);
+
+                this.html.parentNode.removeChild(this.html);
+                this.html = null;
+            };
+
+            this.update = function () {
+                let correctFeedback, incorrectFeedback;
+                this.html = this.html || document.createElement("div");
+
+                correctFeedback = "Nice! You got it right.";
+                incorrectFeedback = "Oh! Not the correct answer.";
+
+                if (this.selectedAnswer !== null) {
+                    if (this.selectedAnswer.value.isCorrect) {
+                        this.html.classList.add("correct");
+                        this.html.classList.remove("incorrect");
+                        this.questionFeedback.innerHTML = correctFeedback;
+                    } else {
+                        this.html.classList.add("incorrect");
+                        this.html.classList.remove("correct");
+                        this.questionFeedback.innerHTML = incorrectFeedback;
+                    }
+                }
+            };
+
+            function createAnswer(obj) {
+                this.value = {
+                    text: "Answer",
+                    isCorrect: false
+                };
+
+                this.value = Object.assign(this.value, obj);
+
+                this.html = document.createElement("button");
+                this.html.classList.add("answer");
+
+                this.html.textContent = this.value.text;
+
+                return this.html;
+            }
+        };
+
+        //
+        // main.js
+        //
+
+        let questionsData = [
+            {
+                text: "Channel name",
+                answers: [
+                    {
+                        text: "Pewdipie",
+                        isCorrect: false
+                    },
+                    {
+                        text: "SmfCoder",
+                        isCorrect: true
+                    },
+                    {
+                        text: "Jack",
+                        isCorrect: false
+                    }
+                ]
+            },
+            {
+                text: "Channel goal",
+                answers: [
+                    {
+                        text: "Help you become a better developer",
+                        isCorrect: true
+                    },
+                    {
+                        text: "Help you cook amazing cookies",
+                        isCorrect: false
+                    },
+                    {
+                        text: "Becoming an artist",
+                        isCorrect: false
+                    },
+                    {
+                        text: "Don't know",
+                        isCorrect: false
+                    }
+                ]
+            },
+            {
+                text: "Subscribe and ...",
+                answers: [
+                    {
+                        text: "Watch all my videos",
+                        isCorrect: false
+                    },
+                    {
+                        text: 'Comment "I subscribed"',
+                        isCorrect: false
+                    },
+                    {
+                        text: "Active the notifications",
+                        isCorrect: true
+                    }
+                ]
+            },
+            {
+                text: "In witch year was the first version of c++ released",
+                answers: [
+                    {
+                        text: "1982",
+                        isCorrect: true
+                    },
+                    {
+                        text: "1995",
+                        isCorrect: false
+                    },
+                    {
+                        text: "1983",
+                        isCorrect: false
+                    },
+                    {
+                        text: "1985",
+                        isCorrect: false
+                    }
+                ]
+            },
+            {
+                text: "What is France capital",
+                answers: [
+                    {
+                        text: "Lyon",
+                        isCorrect: true
+                    },
+                    {
+                        text: "Marseille",
+                        isCorrect: false
+                    },
+                    {
+                        text: "Paris",
+                        isCorrect: true
+                    },
+                    {
+                        text: "Lille",
+                        isCorrect: false
+                    }
+                ]
+            }
+        ];
+
+        // variables initialization
+        let questions = [];
+        let score = 0,
+            answeredQuestions = 0;
+        let appContainer = document.getElementById("questions-container");
+        let scoreContainer = document.getElementById("score-container");
+        scoreContainer.innerHTML = `Score: ${score}/${questionsData.length}`;
+
+        /**
+         * Shuffles array in place. ES6 version
+         * @param {Array} arr items An array containing the items.
+         */
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        shuffle(questionsData);
+
+        // creating questions
+        for (var i = 0; i < questionsData.length; i++) {
+            let question = new Question({
+                text: questionsData[i].text,
+                answers: questionsData[i].answers
+            });
+
+            appContainer.appendChild(question.create());
+            questions.push(question);
+        }
+
+        document.addEventListener("question-answered", ({ detail }) => {
+            if (detail.answer.isCorrect) {
+                score++;
+            }
+
+            answeredQuestions++;
+            scoreContainer.innerHTML = `Score: ${score}/${questions.length}`;
+            detail.question.disable();
+
+            if (answeredQuestions == questions.length) {
+                setTimeout(function () {
+                    alert(`Quiz completed! \nFinal score: ${score}/${questions.length}`);
+                }, 100);
+            }
+        });
+
+        console.log(questions, questionsData);
+
+    </script>
+    <script>
+        // main.js content here...
+    </script>
+    <script src="{{ asset('scripts/index.js') }}"></script>
+    </body>
+{% endblock %}
